@@ -93,7 +93,73 @@ This runs:
 - DeepWalk
 - Node2Vec
 
-and prints wall-clock totals for direct comparison.
+and writes `results.csv` (time + node classification + optional link prediction).
+
+## Link prediction evaluation
+
+Generate a train/test split and evaluate AUC/AP:
+
+```bash
+python3 scripts/split_link_prediction.py \
+  --edgelist edgelist.txt \
+  --train-out lp_train.edgelist \
+  --test-pos-out lp_test_pos.txt \
+  --test-neg-out lp_test_neg.txt \
+  --test-ratio 0.1 --neg-mult 1.0 --seed 42
+
+python3 scripts/eval_link_prediction.py \
+  --vectors vectors.txt \
+  --test-pos lp_test_pos.txt \
+  --test-neg lp_test_neg.txt \
+  --metric dot
+```
+
+To run link prediction inside the benchmark runner:
+
+```bash
+python3 scripts/run_experiments.py \
+  --dataset-name cora \
+  --edgelist data/real/cora/edgelist.txt \
+  --attributes data/real/cora/attributes.txt \
+  --labels data/real/cora/labels.txt \
+  --outdir runs_real/cora \
+  --with-link-pred
+```
+
+## Hyperparameter sweep (`lambda`, `beta`)
+
+```bash
+python3 scripts/sweep_attr_params.py \
+  --dataset-name cora \
+  --edgelist data/real/cora/edgelist.txt \
+  --attributes data/real/cora/attributes.txt \
+  --labels data/real/cora/labels.txt \
+  --outdir runs_real/cora_sweep \
+  --lambdas 0.0,0.05,0.1,0.2,0.4 \
+  --betas 0.0,0.1,0.2,0.3,0.5 \
+  --with-link-pred
+```
+
+Outputs:
+- `sweep_results.csv`
+- `sweep_node_accuracy.svg`
+- `sweep_link_auc.svg` (if link prediction enabled)
+
+## CSV export + plotting for report/SOP
+
+Run both Cora and BlogCatalog benchmarks and auto-generate plots:
+
+```bash
+./scripts/benchmark_real.sh
+```
+
+Outputs:
+- `runs_real/benchmark_results.csv` (combined CSV)
+- `runs_real/cora/results.csv`
+- `runs_real/blogcatalog/results.csv`
+- `runs_real/figures/time_comparison.svg`
+- `runs_real/figures/node_accuracy.svg`
+- `runs_real/figures/link_auc.svg`
 
 ## Notes on complexity
 

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="270">
+<text x="10" y="20" font-size="14">link_auc heatmap</text>
+<text x="80" y="45" font-size="11">b=0.00</text>
+<text x="150" y="45" font-size="11">b=0.20</text>
+<text x="220" y="45" font-size="11">b=0.30</text>
+<text x="5" y="88" font-size="11">l=0.00</text>
+<rect x="70" y="60" width="62" height="40" fill="rgb(249,43,249)" stroke="black"/>
+<text x="76" y="84" font-size="10">0.664</text>
+<rect x="140" y="60" width="62" height="40" fill="rgb(191,84,191)" stroke="black"/>
+<text x="146" y="84" font-size="10">0.679</text>
+<rect x="210" y="60" width="62" height="40" fill="rgb(255,40,255)" stroke="black"/>
+<text x="216" y="84" font-size="10">0.662</text>
+<text x="5" y="138" font-size="11">l=0.10</text>
+<rect x="70" y="110" width="62" height="40" fill="rgb(65,173,65)" stroke="black"/>
+<text x="76" y="134" font-size="10">0.712</text>
+<rect x="140" y="110" width="62" height="40" fill="rgb(89,156,89)" stroke="black"/>
+<text x="146" y="134" font-size="10">0.706</text>
+<rect x="210" y="110" width="62" height="40" fill="rgb(72,168,72)" stroke="black"/>
+<text x="216" y="134" font-size="10">0.711</text>
+<text x="5" y="188" font-size="11">l=0.20</text>
+<rect x="70" y="160" width="62" height="40" fill="rgb(31,197,31)" stroke="black"/>
+<text x="76" y="184" font-size="10">0.722</text>
+<rect x="140" y="160" width="62" height="40" fill="rgb(45,187,45)" stroke="black"/>
+<text x="146" y="184" font-size="10">0.718</text>
+<rect x="210" y="160" width="62" height="40" fill="rgb(0,220,0)" stroke="black"/>
+<text x="216" y="184" font-size="10">0.730</text>
+<text x="5" y="238" font-size="11">l=0.40</text>
+<rect x="70" y="210" width="62" height="40" fill="rgb(5,216,5)" stroke="black"/>
+<text x="76" y="234" font-size="10">0.728</text>
+<rect x="140" y="210" width="62" height="40" fill="rgb(28,199,28)" stroke="black"/>
+<text x="146" y="234" font-size="10">0.722</text>
+<rect x="210" y="210" width="62" height="40" fill="rgb(26,200,26)" stroke="black"/>
+<text x="216" y="234" font-size="10">0.723</text>
+</svg>

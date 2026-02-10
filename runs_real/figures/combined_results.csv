@@ -1,0 +1,9 @@
+dataset,method,total_time_sec,embed_time_sec,node_accuracy_mean,node_accuracy_std,link_auc,link_ap,vectors
+cora,louvainNE,11.138386,0.200568,0.270918,0.000000,0.840804,0.875567,runs_real/cora/vec_base.txt
+cora,attr-louvainNE,12.805525,1.927959,0.127909,0.000000,0.718155,0.789334,runs_real/cora/vec_attr.txt
+cora,deepwalk,18.704821,7.792821,0.045834,0.000000,0.524911,0.519125,runs_real/cora/vec_deepwalk.txt
+cora,node2vec,18.827347,7.794241,0.045834,0.000000,0.525780,0.519312,runs_real/cora/vec_node2vec.txt
+blogcatalog,louvainNE,6.843139,0.356192,0.161171,0.000000,0.579640,0.576108,runs_real/blogcatalog/vec_base.txt
+blogcatalog,attr-louvainNE,7.867065,1.420156,0.182506,0.000000,0.613340,0.599926,runs_real/blogcatalog/vec_attr.txt
+blogcatalog,deepwalk,14.008035,7.473804,0.137898,0.000000,0.499926,0.500696,runs_real/blogcatalog/vec_deepwalk.txt
+blogcatalog,node2vec,18.106553,11.666972,0.137898,0.000000,0.500148,0.501460,runs_real/blogcatalog/vec_node2vec.txt
