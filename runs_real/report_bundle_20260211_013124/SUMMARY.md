@@ -1,0 +1,72 @@
+# Report Bundle Summary
+
+Generated: `2026-02-11T01:31:24`
+
+## Included Files
+
+- `benchmark_results.csv`
+- `tuned_summary.csv`
+- `cora__results.csv`
+- `blogcatalog__results.csv`
+- `cora_tuned__results.csv`
+- `blogcatalog_tuned__results.csv`
+- `cora_sweep__sweep_results.csv`
+- `blogcatalog_sweep__sweep_results.csv`
+- `cora_sweep_dense__sweep_results.csv`
+- `blogcatalog_sweep_dense__sweep_results.csv`
+- `figures__time_comparison.svg`
+- `figures__node_accuracy.svg`
+- `figures__link_auc.svg`
+- `figures_tuned__time_comparison.svg`
+- `figures_tuned__node_accuracy.svg`
+- `figures_tuned__link_auc.svg`
+
+## Benchmark Results
+
+| dataset | method | total_time_sec | embed_time_sec | node_accuracy_mean | link_auc | link_ap |
+|---|---|---|---|---|---|---|
+| cora | louvainNE | 11.138386 | 0.200568 | 0.270918 | 0.840804 | 0.875567 |
+| cora | attr-louvainNE | 12.805525 | 1.927959 | 0.127909 | 0.718155 | 0.789334 |
+| cora | deepwalk | 18.704821 | 7.792821 | 0.045834 | 0.524911 | 0.519125 |
+| cora | node2vec | 18.827347 | 7.794241 | 0.045834 | 0.525780 | 0.519312 |
+| blogcatalog | louvainNE | 6.843139 | 0.356192 | 0.161171 | 0.579640 | 0.576108 |
+| blogcatalog | attr-louvainNE | 7.867065 | 1.420156 | 0.182506 | 0.613340 | 0.599926 |
+| blogcatalog | deepwalk | 14.008035 | 7.473804 | 0.137898 | 0.499926 | 0.500696 |
+| blogcatalog | node2vec | 18.106553 | 11.666972 | 0.137898 | 0.500148 | 0.501460 |
+
+## Selected Tuned Params
+
+| dataset | best_lambda | best_beta | selection | node_accuracy | link_auc | weighted_score |
+|---|---|---|---|---|---|---|
+| cora | 0.200000 | 0.300000 | 0.7*node_acc+0.3*link_auc | 0.148694 | 0.725533 | 0.321746 |
+| blogcatalog | 0.300000 | 0.100000 | 0.7*node_acc+0.3*link_auc | 0.200737 | 0.647103 | 0.334647 |
+
+## Top Dense Sweep Rows (Cora)
+
+| lambda | beta | node_accuracy_mean | link_auc | weighted_score | embed_time_sec |
+|---|---|---|---|---|---|
+| 0.200000 | 0.300000 | 0.148694 | 0.725533 | 0.321746 | 0.470733 |
+| 0.200000 | 0.400000 | 0.147095 | 0.724664 | 0.320366 | 0.480273 |
+| 0.150000 | 0.150000 | 0.149227 | 0.719457 | 0.320296 | 0.485986 |
+| 0.300000 | 0.200000 | 0.144608 | 0.724818 | 0.318671 | 0.467876 |
+| 0.350000 | 0.050000 | 0.141588 | 0.730128 | 0.318150 | 0.479035 |
+| 0.400000 | 0.000000 | 0.139279 | 0.729760 | 0.316423 | 0.479419 |
+| 0.300000 | 0.250000 | 0.141055 | 0.722246 | 0.315412 | 0.473140 |
+| 0.400000 | 0.200000 | 0.134660 | 0.731660 | 0.313760 | 0.468661 |
+| 0.250000 | 0.250000 | 0.135726 | 0.728568 | 0.313579 | 0.491764 |
+| 0.300000 | 0.350000 | 0.139101 | 0.720311 | 0.313464 | 0.483379 |
+
+## Top Dense Sweep Rows (BlogCatalog)
+
+| lambda | beta | node_accuracy_mean | link_auc | weighted_score | embed_time_sec |
+|---|---|---|---|---|---|
+| 0.300000 | 0.100000 | 0.200737 | 0.647103 | 0.334647 | 0.133354 |
+| 0.300000 | 0.300000 | 0.207913 | 0.617894 | 0.330907 | 0.142487 |
+| 0.300000 | 0.050000 | 0.192009 | 0.643255 | 0.327383 | 0.146509 |
+| 0.300000 | 0.400000 | 0.200349 | 0.616728 | 0.325263 | 0.141093 |
+| 0.050000 | 0.150000 | 0.188324 | 0.641404 | 0.324248 | 0.152560 |
+| 0.300000 | 0.250000 | 0.192591 | 0.631366 | 0.324223 | 0.143515 |
+| 0.200000 | 0.300000 | 0.190458 | 0.633580 | 0.323395 | 0.134018 |
+| 0.200000 | 0.100000 | 0.181924 | 0.652226 | 0.323015 | 0.143258 |
+| 0.150000 | 0.200000 | 0.197828 | 0.610859 | 0.321737 | 0.155098 |
+| 0.300000 | 0.200000 | 0.192203 | 0.621408 | 0.320964 | 0.141482 |

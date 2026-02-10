@@ -1,0 +1,6 @@
+dataset,method,total_time_sec,embed_time_sec,node_accuracy_mean,node_accuracy_std,link_auc,link_ap,vectors
+cora_tuned,compile,0.005695,0.000000,,,,,-
+cora_tuned,louvainNE,12.307698,0.215899,0.246580,0.000000,0.858266,0.875238,runs_real/cora_tuned/vec_base.txt
+cora_tuned,attr-louvainNE,15.674961,2.148487,0.109611,0.000000,0.728331,0.798828,runs_real/cora_tuned/vec_attr.txt
+cora_tuned,deepwalk,21.859653,9.460449,0.045834,0.000000,0.524911,0.519125,runs_real/cora_tuned/vec_deepwalk.txt
+cora_tuned,node2vec,19.510960,8.538131,0.045834,0.000000,0.525780,0.519312,runs_real/cora_tuned/vec_node2vec.txt

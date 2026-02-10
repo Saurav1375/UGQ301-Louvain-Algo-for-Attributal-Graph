@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="580" height="420">
+<text x="20" y="24" font-size="18">Total Runtime (sec)</text>
+<line x1="70" y1="50" x2="70" y2="330" stroke="black"/>
+<line x1="70" y1="330" x2="560" y2="330" stroke="black"/>
+<line x1="70" y1="330.0" x2="560" y2="330.0" stroke="#ddd"/>
+<text x="8" y="334.0" font-size="10">0.00</text>
+<line x1="70" y1="274.0" x2="560" y2="274.0" stroke="#ddd"/>
+<text x="8" y="278.0" font-size="10">3.77</text>
+<line x1="70" y1="218.0" x2="560" y2="218.0" stroke="#ddd"/>
+<text x="8" y="222.0" font-size="10">7.53</text>
+<line x1="70" y1="162.0" x2="560" y2="162.0" stroke="#ddd"/>
+<text x="8" y="166.0" font-size="10">11.30</text>
+<line x1="70" y1="106.0" x2="560" y2="106.0" stroke="#ddd"/>
+<text x="8" y="110.0" font-size="10">15.06</text>
+<line x1="70" y1="50.0" x2="560" y2="50.0" stroke="#ddd"/>
+<text x="8" y="54.0" font-size="10">18.83</text>
+<text x="181.06666666666666" y="348" font-size="12">blogcatalog</text>
+<rect x="99.4" y="228.2289474985509" width="40.833333333333336" height="101.77105250144909" fill="#1f77b4"/>
+<text x="99.4" y="224.2289474985509" font-size="9">6.843</text>
+<rect x="146.23333333333335" y="213.0011365913636" width="40.833333333333336" height="116.99886340863638" fill="#d62728"/>
+<text x="146.23333333333335" y="209.0011365913636" font-size="9">7.867</text>
+<rect x="193.06666666666666" y="121.6727300984042" width="40.833333333333336" height="208.3272699015958" fill="#2ca02c"/>
+<text x="193.06666666666666" y="117.6727300984042" font-size="9">14.008</text>
+<rect x="239.9" y="60.71963670717918" width="40.833333333333336" height="269.2803632928208" fill="#ff7f0e"/>
+<text x="239.9" y="56.71963670717918" font-size="9">18.107</text>
+<text x="426.06666666666666" y="348" font-size="12">cora</text>
+<rect x="344.4" y="164.3501036019573" width="40.833333333333336" height="165.6498963980427" fill="#1f77b4"/>
+<text x="344.4" y="160.3501036019573" font-size="9">11.138</text>
+<rect x="391.2333333333333" y="139.55643936450528" width="40.833333333333336" height="190.44356063549472" fill="#d62728"/>
+<text x="391.2333333333333" y="135.55643936450528" font-size="9">12.806</text>
+<rect x="438.06666666666666" y="51.822204689805744" width="40.833333333333336" height="278.17779531019426" fill="#2ca02c"/>
+<text x="438.06666666666666" y="47.822204689805744" font-size="9">18.705</text>
+<rect x="484.9" y="50.0" width="40.833333333333336" height="280.0" fill="#ff7f0e"/>
+<text x="484.9" y="46.0" font-size="9">18.827</text>
+<rect x="70" y="380" width="14" height="14" fill="#1f77b4"/>
+<text x="90" y="392" font-size="12">louvainNE</text>
+<rect x="210" y="380" width="14" height="14" fill="#d62728"/>
+<text x="230" y="392" font-size="12">attr-louvainNE</text>
+<rect x="350" y="380" width="14" height="14" fill="#2ca02c"/>
+<text x="370" y="392" font-size="12">deepwalk</text>
+<rect x="490" y="380" width="14" height="14" fill="#ff7f0e"/>
+<text x="510" y="392" font-size="12">node2vec</text>
+</svg>

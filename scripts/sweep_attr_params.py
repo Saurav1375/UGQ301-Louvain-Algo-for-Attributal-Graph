@@ -124,6 +124,9 @@ def main():
     ap.add_argument("--lp-neg-mult", type=float, default=1.0)
     ap.add_argument("--lp-seed", type=int, default=42)
     ap.add_argument("--lp-metric", choices=["dot", "cosine"], default="dot")
+    ap.add_argument("--score-node-weight", type=float, default=0.7)
+    ap.add_argument("--score-link-weight", type=float, default=0.3)
+    ap.add_argument("--select-by", choices=["node_accuracy", "link_auc", "weighted_score"], default="weighted_score")
     args = ap.parse_args()
 
     out = Path(args.outdir)
@@ -154,13 +157,15 @@ def main():
 
     rows = []
     for lam in lambdas:
+        hier = out / f"hier_l{lam:.3f}".replace(".", "p")
+        hier = Path(str(hier) + ".txt")
+        run(["./recpart_attr", train_graph, str(hier), args.attributes, str(lam), "4"])
+
         for beta in betas:
             tag = f"l{lam:.3f}_b{beta:.3f}".replace(".", "p")
-            hier = out / f"hier_{tag}.txt"
             vec = out / f"vec_{tag}.txt"
 
             t0 = time.time()
-            run(["./recpart_attr", train_graph, str(hier), args.attributes, str(lam), "4"])
             run(["./hi2vec_attr", str(args.dim), str(args.a), str(beta), str(hier), args.attributes, str(vec)])
             embed_t = time.time() - t0
 
@@ -171,6 +176,9 @@ def main():
                 auc, ap = evaluate_link(vec, lp_pos, lp_neg, args.lp_metric)
                 auc_v = f"{auc:.6f}"
                 ap_v = f"{ap:.6f}"
+                weighted = args.score_node_weight * acc_m + args.score_link_weight * auc
+            else:
+                weighted = acc_m
 
             rows.append({
                 "dataset": args.dataset_name,
@@ -181,10 +189,15 @@ def main():
                 "node_accuracy_std": f"{acc_s:.6f}",
                 "link_auc": auc_v,
                 "link_ap": ap_v,
+                "weighted_score": f"{weighted:.6f}",
                 "vectors": str(vec),
             })
-
-    rows.sort(key=lambda r: float(r["node_accuracy_mean"]), reverse=True)
+    if args.select_by == "node_accuracy":
+        rows.sort(key=lambda r: float(r["node_accuracy_mean"]), reverse=True)
+    elif args.select_by == "link_auc":
+        rows.sort(key=lambda r: float(r["link_auc"]) if r["link_auc"] else -1.0, reverse=True)
+    else:
+        rows.sort(key=lambda r: float(r["weighted_score"]), reverse=True)
 
     out_csv = out / "sweep_results.csv"
     fields = list(rows[0].keys()) if rows else []
@@ -204,6 +217,8 @@ def main():
         print(f"best_lambda {best['lambda']}")
         print(f"best_beta {best['beta']}")
         print(f"best_node_accuracy {best['node_accuracy_mean']}")
+        print(f"best_link_auc {best['link_auc']}")
+        print(f"best_weighted_score {best['weighted_score']}")
 
 
 if __name__ == "__main__":

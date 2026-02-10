@@ -1,0 +1,13 @@
+dataset,lambda,beta,embed_time_sec,node_accuracy_mean,node_accuracy_std,link_auc,link_ap,vectors
+blogcatalog,0.400000,0.000000,1.687032,0.199961,0.000000,0.605556,0.606825,runs_real/blogcatalog_sweep/vec_l0p400_b0p000.txt
+blogcatalog,0.200000,0.300000,1.635623,0.196664,0.000000,0.637391,0.625636,runs_real/blogcatalog_sweep/vec_l0p200_b0p300.txt
+blogcatalog,0.400000,0.300000,1.817559,0.193561,0.000000,0.627329,0.602980,runs_real/blogcatalog_sweep/vec_l0p400_b0p300.txt
+blogcatalog,0.400000,0.200000,1.869970,0.192203,0.000000,0.639398,0.616170,runs_real/blogcatalog_sweep/vec_l0p400_b0p200.txt
+blogcatalog,0.200000,0.000000,1.548496,0.191621,0.000000,0.617742,0.605485,runs_real/blogcatalog_sweep/vec_l0p200_b0p000.txt
+blogcatalog,0.200000,0.200000,1.654176,0.180178,0.000000,0.623030,0.605916,runs_real/blogcatalog_sweep/vec_l0p200_b0p200.txt
+blogcatalog,0.000000,0.300000,0.728798,0.171839,0.000000,0.610053,0.606075,runs_real/blogcatalog_sweep/vec_l0p000_b0p300.txt
+blogcatalog,0.000000,0.000000,0.780349,0.166990,0.000000,0.633877,0.607747,runs_real/blogcatalog_sweep/vec_l0p000_b0p000.txt
+blogcatalog,0.000000,0.200000,0.736951,0.163693,0.000000,0.642023,0.628295,runs_real/blogcatalog_sweep/vec_l0p000_b0p200.txt
+blogcatalog,0.100000,0.000000,1.493786,0.159620,0.000000,0.630957,0.616248,runs_real/blogcatalog_sweep/vec_l0p100_b0p000.txt
+blogcatalog,0.100000,0.200000,1.529216,0.159038,0.000000,0.617657,0.606063,runs_real/blogcatalog_sweep/vec_l0p100_b0p200.txt
+blogcatalog,0.100000,0.300000,1.530024,0.154577,0.000000,0.628015,0.612290,runs_real/blogcatalog_sweep/vec_l0p100_b0p300.txt

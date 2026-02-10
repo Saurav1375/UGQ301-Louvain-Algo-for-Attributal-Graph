@@ -1,0 +1,6 @@
+dataset,method,total_time_sec,embed_time_sec,node_accuracy_mean,node_accuracy_std,link_auc,link_ap,vectors
+blogcatalog_tuned,compile,0.005705,0.000000,,,,,-
+blogcatalog_tuned,louvainNE,7.414559,0.383052,0.169899,0.000000,0.622561,0.598580,runs_real/blogcatalog_tuned/vec_base.txt
+blogcatalog_tuned,attr-louvainNE,8.791101,1.481374,0.191427,0.000000,0.616369,0.608896,runs_real/blogcatalog_tuned/vec_attr.txt
+blogcatalog_tuned,deepwalk,17.137363,9.330246,0.137898,0.000000,0.499926,0.500696,runs_real/blogcatalog_tuned/vec_deepwalk.txt
+blogcatalog_tuned,node2vec,20.596030,13.182448,0.137898,0.000000,0.500148,0.501460,runs_real/blogcatalog_tuned/vec_node2vec.txt
