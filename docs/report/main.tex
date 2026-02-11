@@ -1,0 +1,295 @@
+\documentclass[10pt,twoside,twocolumn]{article}
+
+\usepackage[a4paper,margin=0.72in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue}
+\setlength{\parskip}{0.32em}
+\setlength{\parindent}{0pt}
+\setlist[itemize]{leftmargin=*,itemsep=0.2em,topsep=0.2em}
+
+\title{\textbf{Extending LouvainNE to Attributed Graphs}\\
+\normalsize Formal UGQ301 Technical Report (Two-Column Research Format)}
+
+\author{%
+Amay Dixit (12340220, DSAI) \and
+Saurav Gupta (12341940, CSE) \and
+Rohit Raghuwanshi (12341820, DSAI) \and
+Shashank Yadav (12342010, DSAI)\\[0.35em]
+Supervisor: Prof. Soumajit Pramanik
+}
+
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report documents the complete implementation, benchmarking, and analysis of an attributed extension of LouvainNE. The objective from our Statement of Purpose (SOP) was to integrate attributes \emph{inside} the LouvainNE pipeline while retaining strong efficiency. We implemented an attributed hierarchy builder (\texttt{recpart\_attr}), an attributed embedding generator (\texttt{hi2vec\_attr}), complete benchmark scripts, link-prediction evaluation, hyperparameter sweeps over attribute weights, CSV export pipelines, and reproducible figure generation. Experiments were run on the real datasets Cora and BlogCatalog and compared against LouvainNE, DeepWalk, and Node2Vec.
+\end{abstract}
+
+\section{SOP Details and Problem Statement}
+\textbf{Project title from SOP:} \emph{Improving Embedding of Attributed Networks using Louvain Algorithm}.\\
+\textbf{Team:} Amay Dixit (12340220), Saurav Gupta (12341940), Rohit Raghuwanshi (12341820), Shashank Yadav (12342010).\\
+\textbf{Supervisor:} Prof. Soumajit Pramanik.\\
+\textbf{Course:} UGQ301.
+
+\textbf{Core problem:} LouvainNE is scalable and effective for structural graphs, but it does not use node attributes. In real networks, structure and semantics both matter (for example, two papers can be semantically similar but not directly linked).
+
+\textbf{Mandatory constraints that guided the implementation:}
+\begin{itemize}
+  \item Attributes must affect LouvainNE internals (not only post-processing).
+  \item Runtime should remain near LouvainNE-style efficiency (avoid GNN-style message passing and backprop over full adjacency).
+  \item Comparisons should include structural and popular random-walk baselines.
+\end{itemize}
+
+\section{Beginner-Friendly Background}
+\subsection{What is graph embedding?}
+A graph embedding maps each node to a fixed-length vector. Similar nodes should have vectors that are close in space. These vectors are then used for tasks like node classification and link prediction.
+
+\subsection{Why LouvainNE is fast}
+LouvainNE first builds a \emph{hierarchy} of communities using Louvain partitioning, then converts hierarchy paths to vectors. This avoids expensive epoch-based training over all edges.
+
+\subsection{What ``attributed graph'' means}
+Each node has additional features (attributes), such as text/topic features (Cora) or group-membership indicators (BlogCatalog).
+
+\section{System Design: What We Built}
+\subsection{Implemented modules}
+\begin{itemize}
+  \item \texttt{recpart} / \texttt{hi2vec}: original LouvainNE baseline.
+  \item \texttt{recpart\_attr}: attributed hierarchy construction.
+  \item \texttt{hi2vec\_attr}: attributed embedding generation.
+  \item \texttt{attr.c}, \texttt{attr.h}: loading and querying attributes.
+  \item \texttt{scripts/embed\_baselines.py}: DeepWalk and Node2Vec baselines.
+  \item \texttt{scripts/eval\_node\_classification.py}: node classification metric.
+  \item \texttt{scripts/split\_link\_prediction.py}: train/test edge split + negatives.
+  \item \texttt{scripts/eval\_link\_prediction.py}: link AUC and AP.
+  \item \texttt{scripts/run\_experiments.py}: end-to-end benchmark + CSV export.
+  \item \texttt{scripts/sweep\_attr\_params.py}: $\lambda$/$\beta$ sweeps + heatmaps.
+  \item \texttt{scripts/plot\_results.py}: publication-ready SVG comparison plots.
+  \item \texttt{scripts/build\_report\_bundle.py}: one-command artifact bundle generation.
+\end{itemize}
+
+\subsection{Where attributes are integrated (internally)}
+\textbf{Stage 1: hierarchy construction.}
+During Louvain node moves, we changed gain from purely structural to:
+\[
+\Delta = \Delta Q_{\text{struct}} + \lambda\, s(x_u, C)
+\]
+where $x_u$ is node attribute vector, $C$ is target community, and $\lambda$ controls structure-vs-attribute influence.
+
+\textbf{Stage 2: embedding generation.}
+In hierarchy-to-vector conversion, we inject an attribute-projection term:
+\[
+z_u = z^{\text{hier}}_u + \beta\,P x_u
+\]
+where $P$ is a random projection and $\beta$ controls attribute strength.
+
+This satisfies the requirement that attributes influence both partitioning and final vectors.
+
+\section{Data and Preprocessing}
+\subsection{Datasets used (real only)}
+\begin{itemize}
+  \item \textbf{Cora:} citation network, text-like sparse features.
+  \item \textbf{BlogCatalog:} social network, group-membership attributes.
+\end{itemize}
+
+\subsection{Generated files per dataset}
+\begin{itemize}
+  \item \texttt{edgelist.txt}: undirected graph edges.
+  \item \texttt{attributes.txt}: node features per line.
+  \item \texttt{labels.txt}: node class labels for node classification.
+\end{itemize}
+
+\subsection{Link prediction protocol}
+We create:
+\begin{itemize}
+  \item \texttt{lp\_train.edgelist} for embedding training,
+  \item \texttt{lp\_test\_pos.txt} for true held-out edges,
+  \item \texttt{lp\_test\_neg.txt} for sampled non-edges.
+\end{itemize}
+
+Then score node pairs with embedding similarity and report AUC/AP.
+
+\section{Evaluation Metrics (Explained Simply)}
+\begin{itemize}
+  \item \textbf{Node accuracy:} how often predicted node class equals true class.
+  \item \textbf{Link AUC:} probability that a real edge gets higher score than a fake edge.
+  \item \textbf{Link AP:} ranking quality emphasizing positive edges.
+  \item \textbf{Total time:} end-to-end runtime for each method.
+  \item \textbf{Embedding time:} only graph-to-vector generation time.
+\end{itemize}
+
+\section{Benchmark Results}
+All values below are from generated CSVs in \texttt{runs\_real}.
+
+\begin{table*}[t]
+\centering
+\caption{Main benchmark (from \texttt{runs\_real/benchmark\_results.csv})}
+\begin{tabular}{llrrrr}
+\toprule
+Dataset & Method & Total Time (s) & Embedding Time (s) & Node Accuracy & Link AUC \\
+\midrule
+Cora & LouvainNE & 11.138 & 0.201 & 0.2709 & 0.8408 \\
+Cora & Attr-LouvainNE & 12.806 & 1.928 & 0.1279 & 0.7182 \\
+Cora & DeepWalk & 18.705 & 7.793 & 0.0458 & 0.5249 \\
+Cora & Node2Vec & 18.827 & 7.794 & 0.0458 & 0.5258 \\
+\midrule
+BlogCatalog & LouvainNE & 6.843 & 0.356 & 0.1612 & 0.5796 \\
+BlogCatalog & Attr-LouvainNE & 7.867 & 1.420 & 0.1825 & 0.6133 \\
+BlogCatalog & DeepWalk & 14.008 & 7.474 & 0.1379 & 0.4999 \\
+BlogCatalog & Node2Vec & 18.107 & 11.667 & 0.1379 & 0.5001 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\textbf{Interpretation for beginners:}
+\begin{itemize}
+  \item On BlogCatalog, attributed integration improves accuracy and AUC over structural LouvainNE.
+  \item On Cora in this implementation/configuration, structural LouvainNE still performs better in classification/AUC.
+  \item LouvainNE-style methods remain substantially faster than walk baselines in embedding time.
+\end{itemize}
+
+\section{Figures}
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{assets/time_comparison_baseline.pdf}
+\caption{Baseline runtime comparison.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{assets/node_accuracy_baseline.pdf}
+\caption{Baseline node classification accuracy.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{assets/link_auc_baseline.pdf}
+\caption{Baseline link prediction AUC.}
+\end{figure}
+
+\section{Hyperparameter Sweep ($\lambda$, $\beta$)}
+Dense sweep objective used for automatic selection:
+\[
+\text{WeightedScore} = 0.7\cdot\text{NodeAccuracy} + 0.3\cdot\text{LinkAUC}
+\]
+
+\textbf{Best selected values (from \texttt{runs\_real/tuned\_summary.csv}):}
+\begin{itemize}
+  \item Cora: $\lambda=0.20$, $\beta=0.30$, score $0.321746$.
+  \item BlogCatalog: $\lambda=0.30$, $\beta=0.10$, score $0.334647$.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{assets/cora_sweep_node_accuracy.pdf}
+\caption{Cora sweep heatmap (node accuracy).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{assets/cora_sweep_link_auc.pdf}
+\caption{Cora sweep heatmap (link AUC).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{assets/blogcatalog_sweep_node_accuracy.pdf}
+\caption{BlogCatalog sweep heatmap (node accuracy).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{assets/blogcatalog_sweep_link_auc.pdf}
+\caption{BlogCatalog sweep heatmap (link AUC).}
+\end{figure}
+
+\section{Tuned Pass}
+\begin{table}[H]
+\centering
+\caption{Tuned attributed settings used}
+\begin{tabular}{lcc}
+\toprule
+Dataset & $\lambda$ & $\beta$ \\
+\midrule
+Cora & 0.20 & 0.30 \\
+BlogCatalog & 0.30 & 0.10 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Tuned Attr-LouvainNE outcome}
+\begin{tabular}{lrrr}
+\toprule
+Dataset & Total Time (s) & Node Acc. & Link AUC \\
+\midrule
+Cora & 15.675 & 0.1096 & 0.7283 \\
+BlogCatalog & 8.791 & 0.1914 & 0.6164 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{What to Run (Step-by-Step)}
+\textbf{1) Real benchmark with CSV and plots:}
+\begin{verbatim}
+./scripts/benchmark_real.sh
+\end{verbatim}
+
+\textbf{2) Dense sweep (example):}
+\begin{verbatim}
+python3 scripts/sweep_attr_params.py \
+  --dataset-name cora \
+  --edgelist data/real/cora/edgelist.txt \
+  --attributes data/real/cora/attributes.txt \
+  --labels data/real/cora/labels.txt \
+  --outdir runs_real/cora_sweep_dense \
+  --lambdas 0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4 \
+  --betas 0.0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4 \
+  --with-link-pred --select-by weighted_score
+\end{verbatim}
+
+\textbf{3) Build final artifact bundle:}
+\begin{verbatim}
+python3 scripts/build_report_bundle.py --runs-root runs_real
+\end{verbatim}
+
+\section{Installations Required}
+\textbf{For experiments:}
+\begin{itemize}
+  \item GCC/Make
+  \item Python 3
+  \item \texttt{librsvg2-bin} (for SVG to PDF conversion)
+\end{itemize}
+
+\textbf{For local LaTeX PDF compile:}
+\begin{itemize}
+  \item Ubuntu/Debian: \texttt{texlive-latex-base texlive-latex-extra texlive-fonts-recommended}
+  \item Arch/EndeavourOS: \texttt{texlive-latex texlive-latexextra texlive-fontsrecommended}
+\end{itemize}
+
+\section{Limitations and Future Work}
+\begin{itemize}
+  \item Performance is dataset-dependent: attributed integration improved BlogCatalog but not Cora in current setup.
+  \item More tuning dimensions are possible (projection strategy, similarity design, label split policy).
+  \item Additional baselines and standardized public splits can strengthen external comparability.
+\end{itemize}
+
+\section*{Conclusion}
+This work delivers a complete, reproducible attributed extension of LouvainNE with integrated benchmarks, sweeps, plots, and reporting tooling. The extension satisfies the core requirement of internal attribute integration while keeping an efficiency-oriented pipeline and transparent evaluation.
+
+\end{document}

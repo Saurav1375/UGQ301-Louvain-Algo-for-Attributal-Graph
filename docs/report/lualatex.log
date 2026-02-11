@@ -1,0 +1,17 @@
+This is LuaHBTeX, Version 1.22.0 (TeX Live 2026/dev/Arch Linux)  (INITEX)  11 FEB 2026 13:53
+ restricted system commands enabled.
+**/usr/share/texmf-dist/tex/latex/tex-ini-files/lualatex.ini
+(/usr/share/texmf-dist/tex/latex/tex-ini-files/lualatex.ini
+(/usr/share/texmf-dist/tex/generic/tex-ini-files/luatexconfig.tex
+(/etc/texmf/tex/generic/tex-ini-files/pdftexconfig.tex))
+! I can't find file `latex.ltx'.
+l.19 \input latex.ltx
+                     
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: 
+! Emergency stop.
+l.19 
+     
+End of file on the terminal!
+
+!  ==> Fatal error occurred, no output PDF file produced!
