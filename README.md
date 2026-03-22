@@ -84,16 +84,82 @@ python3 scripts/run_experiments.py \
   --attributes attributes.txt \
   --labels labels.txt \
   --outdir runs \
-  --dim 128 --a 0.01 --beta 0.3 --lambda-attr 0.2
+  --dim 128 --a 0.01 --beta 0.3 --lambda-attr 0.2 \
+  --with-method1 --method1-alpha 0.8 --method1-knn-k 5 --method1-modes preserve,augment
 ```
 
 This runs:
 - LouvainNE
 - Attributed LouvainNE
+- Method 1 preserve
+- Method 1 augment
 - DeepWalk
 - Node2Vec
 
 and writes `results.csv` (time + node classification + optional link prediction).
+
+## SOP Method 1: Structural Reweighting
+
+Method 1 is implemented as a separate weighted-graph pipeline that preserves the LouvainNE architecture and injects attributes into edge weights before hierarchy construction.
+
+### Edge-preserving variant
+
+Reweight only existing edges:
+
+```bash
+python3 scripts/build_reweighted_graph.py \
+  --edgelist edgelist.txt \
+  --attributes attributes.txt \
+  --out weighted_graph.txt \
+  --mode preserve \
+  --alpha 0.8
+
+./recpart_weighted weighted_graph.txt hierarchy.txt 1
+./hi2vec 128 0.01 hierarchy.txt vectors.txt
+```
+
+For an existing edge `(i,j)`, the new weight is:
+
+```text
+w(i,j) = alpha * 1 + (1 - alpha) * sim(x_i, x_j)
+```
+
+### Edge-augmenting variant
+
+Add top-`k` semantic neighbors in attribute space:
+
+```bash
+python3 scripts/build_reweighted_graph.py \
+  --edgelist edgelist.txt \
+  --attributes attributes.txt \
+  --out weighted_graph_aug.txt \
+  --mode augment \
+  --alpha 0.8 \
+  --knn-k 5
+
+./recpart_weighted weighted_graph_aug.txt hierarchy_aug.txt 1
+./hi2vec 128 0.01 hierarchy_aug.txt vectors_aug.txt
+```
+
+For a non-edge added by augmentation, the weight is:
+
+```text
+w(i,j) = (1 - alpha) * sim(x_i, x_j)
+```
+
+### End-to-end Method 1 runner
+
+```bash
+python3 scripts/run_method1.py \
+  --dataset-name cora \
+  --edgelist data/real/cora/edgelist.txt \
+  --attributes data/real/cora/attributes.txt \
+  --labels data/real/cora/labels.txt \
+  --outdir runs_real/cora_method1 \
+  --mode preserve \
+  --alpha 0.8 \
+  --with-link-pred
+```
 
 ## Link prediction evaluation
 

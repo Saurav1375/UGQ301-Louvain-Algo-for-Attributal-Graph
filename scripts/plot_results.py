@@ -28,7 +28,17 @@ def save_csv(rows, out_path):
 
 def grouped(rows, metric):
     datasets = sorted(set(r["dataset"] for r in rows))
-    methods = ["louvainNE", "attr-louvainNE", "deepwalk", "node2vec"]
+    preferred = [
+        "louvainNE",
+        "attr-louvainNE",
+        "method1-preserve",
+        "method1-augment",
+        "deepwalk",
+        "node2vec",
+    ]
+    present = sorted(set(r["method"] for r in rows))
+    methods = [m for m in preferred if m in present]
+    methods.extend([m for m in present if m not in methods])
 
     data = {}
     for ds in datasets:
@@ -59,6 +69,8 @@ def plot_grouped_bar(rows, metric, title, out_svg):
     colors = {
         "louvainNE": "#1f77b4",
         "attr-louvainNE": "#d62728",
+        "method1-preserve": "#9467bd",
+        "method1-augment": "#8c564b",
         "deepwalk": "#2ca02c",
         "node2vec": "#ff7f0e",
     }
@@ -83,7 +95,7 @@ def plot_grouped_bar(rows, metric, title, out_svg):
         lines.append(f'<text x="8" y="{y+4}" font-size="10">{v:.2f}</text>')
 
     ds_gap = chart_w / max(1, len(datasets))
-    bar_w = ds_gap / 6.0
+    bar_w = ds_gap / max(5.0, 1.5 * len(methods))
 
     for di, ds in enumerate(datasets):
         x_base = left + di * ds_gap + ds_gap * 0.12
@@ -93,14 +105,16 @@ def plot_grouped_bar(rows, metric, title, out_svg):
             bh = (v / vmax) * chart_h
             x = x_base + mi * (bar_w + 6)
             y = y0 - bh
-            lines.append(f'<rect x="{x}" y="{y}" width="{bar_w}" height="{bh}" fill="{colors[m]}"/>')
+            fill = colors.get(m, "#7f7f7f")
+            lines.append(f'<rect x="{x}" y="{y}" width="{bar_w}" height="{bh}" fill="{fill}"/>')
             lines.append(f'<text x="{x}" y="{y-4}" font-size="9">{v:.3f}</text>')
 
     lx = left
     ly = y0 + 50
     for i, m in enumerate(methods):
         x = lx + i * 140
-        lines.append(f'<rect x="{x}" y="{ly}" width="14" height="14" fill="{colors[m]}"/>')
+        fill = colors.get(m, "#7f7f7f")
+        lines.append(f'<rect x="{x}" y="{ly}" width="14" height="14" fill="{fill}"/>')
         lines.append(f'<text x="{x+20}" y="{ly+12}" font-size="12">{m}</text>')
 
     lines.append("</svg>")

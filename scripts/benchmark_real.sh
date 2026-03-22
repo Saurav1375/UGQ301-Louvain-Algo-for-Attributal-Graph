@@ -16,6 +16,7 @@ python3 scripts/run_experiments.py \
   --labels data/real/cora/labels.txt \
   --outdir runs_real/cora \
   --dim 32 --a 0.01 --beta 0.3 --lambda-attr 0.2 \
+  --with-method1 --method1-alpha 0.8 --method1-knn-k 5 --method1-modes preserve,augment \
   --walk-length 5 --num-walks 1 --window 3 --epochs 1 --neg 2 \
   --eval-epochs 5 --eval-runs 1 \
   --with-link-pred --lp-test-ratio 0.1 --lp-neg-mult 1.0 --lp-seed 42 \
@@ -28,6 +29,7 @@ python3 scripts/run_experiments.py \
   --labels data/real/blogcatalog/labels.txt \
   --outdir runs_real/blogcatalog \
   --dim 32 --a 0.01 --beta 0.3 --lambda-attr 0.2 \
+  --with-method1 --method1-alpha 0.8 --method1-knn-k 5 --method1-modes preserve,augment \
   --walk-length 5 --num-walks 1 --window 3 --epochs 1 --neg 2 \
   --eval-epochs 5 --eval-runs 1 \
   --with-link-pred --lp-test-ratio 0.1 --lp-neg-mult 1.0 --lp-seed 42 \

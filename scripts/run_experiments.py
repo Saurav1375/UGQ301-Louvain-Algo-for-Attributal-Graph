@@ -5,17 +5,33 @@ import subprocess
 import time
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
+FIELDNAMES = [
+    "dataset",
+    "method",
+    "alpha",
+    "knn_k",
+    "weight_build_time_sec",
+    "embed_time_sec",
+    "eval_time_sec",
+    "total_time_sec",
+    "node_accuracy_mean",
+    "node_accuracy_std",
+    "link_auc",
+    "link_ap",
+    "vectors",
+]
 
-def run(cmd):
+
+def run(cmd, cwd=None):
     t0 = time.time()
-    subprocess.run(cmd, check=True)
+    subprocess.run(cmd, check=True, cwd=cwd)
     return time.time() - t0
 
 
-def run_capture(cmd):
-    t0 = time.time()
-    out = subprocess.check_output(cmd, text=True)
-    return time.time() - t0, out
+def run_capture(cmd, cwd=None):
+    out = subprocess.check_output(cmd, text=True, cwd=cwd)
+    return out
 
 
 def parse_metrics(output):
@@ -36,25 +52,25 @@ def parse_metrics(output):
 
 
 def evaluate_node(vectors, labels, eval_epochs, eval_runs):
-    _, out = run_capture([
+    out = run_capture([
         "python3", "scripts/eval_node_classification.py",
         "--vectors", str(vectors),
         "--labels", labels,
         "--epochs", str(eval_epochs),
         "--runs", str(eval_runs),
-    ])
+    ], cwd=REPO_ROOT)
     met = parse_metrics(out)
     return float(met.get("accuracy_mean", 0.0)), float(met.get("accuracy_std", 0.0))
 
 
 def evaluate_link(vectors, test_pos, test_neg, metric):
-    _, out = run_capture([
+    out = run_capture([
         "python3", "scripts/eval_link_prediction.py",
         "--vectors", str(vectors),
         "--test-pos", str(test_pos),
         "--test-neg", str(test_neg),
         "--metric", metric,
-    ])
+    ], cwd=REPO_ROOT)
     met = parse_metrics(out)
     return float(met.get("link_auc", 0.0)), float(met.get("link_ap", 0.0))
 
@@ -73,7 +89,7 @@ def maybe_prepare_link_split(edgelist, outdir, test_ratio, neg_mult, seed):
         "--test-ratio", str(test_ratio),
         "--neg-mult", str(neg_mult),
         "--seed", str(seed),
-    ])
+    ], cwd=REPO_ROOT)
 
     return train, test_pos, test_neg
 
@@ -82,10 +98,8 @@ def append_global_csv(global_csv, rows):
     global_csv = Path(global_csv)
     global_csv.parent.mkdir(parents=True, exist_ok=True)
     exists = global_csv.exists()
-    fields = list(rows[0].keys())
-
     with open(global_csv, "a", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=fields)
+        w = csv.DictWriter(f, fieldnames=FIELDNAMES)
         if not exists:
             w.writeheader()
         w.writerows(rows)
@@ -110,6 +124,10 @@ def main():
     ap.add_argument("--lr", type=float, default=0.025)
     ap.add_argument("--eval-epochs", type=int, default=30)
     ap.add_argument("--eval-runs", type=int, default=3)
+    ap.add_argument("--with-method1", action="store_true")
+    ap.add_argument("--method1-alpha", type=float, default=0.8)
+    ap.add_argument("--method1-knn-k", type=int, default=5)
+    ap.add_argument("--method1-modes", default="preserve,augment")
 
     ap.add_argument("--with-link-pred", action="store_true")
     ap.add_argument("--lp-test-ratio", type=float, default=0.1)
@@ -137,12 +155,16 @@ def main():
 
     rows = []
 
-    t_compile = run(["make"])
+    t_compile = run(["make"], cwd=REPO_ROOT)
     rows.append({
         "dataset": args.dataset_name,
         "method": "compile",
-        "total_time_sec": f"{t_compile:.6f}",
+        "alpha": "",
+        "knn_k": "",
+        "weight_build_time_sec": f"{0.0:.6f}",
         "embed_time_sec": f"{0.0:.6f}",
+        "eval_time_sec": f"{0.0:.6f}",
+        "total_time_sec": f"{t_compile:.6f}",
         "node_accuracy_mean": "",
         "node_accuracy_std": "",
         "link_auc": "",
@@ -150,10 +172,10 @@ def main():
         "vectors": "-",
     })
 
-    def run_method(method_name, embed_cmds, vec_path):
+    def run_method(method_name, embed_cmds, vec_path, alpha="", knn_k="", weight_build_time=0.0):
         t_embed = 0.0
         for cmd in embed_cmds:
-            t_embed += run(cmd)
+            t_embed += run(cmd, cwd=REPO_ROOT)
 
         t_eval_start = time.time()
         acc_m, acc_s = evaluate_node(vec_path, args.labels, args.eval_epochs, args.eval_runs)
@@ -165,12 +187,16 @@ def main():
             link_ap = f"{ap_v:.6f}"
         t_eval = time.time() - t_eval_start
 
-        total = t_embed + t_eval
+        total = weight_build_time + t_embed + t_eval
         rows.append({
             "dataset": args.dataset_name,
             "method": method_name,
-            "total_time_sec": f"{total:.6f}",
+            "alpha": alpha,
+            "knn_k": knn_k,
+            "weight_build_time_sec": f"{weight_build_time:.6f}",
             "embed_time_sec": f"{t_embed:.6f}",
+            "eval_time_sec": f"{t_eval:.6f}",
+            "total_time_sec": f"{total:.6f}",
             "node_accuracy_mean": f"{acc_m:.6f}",
             "node_accuracy_std": f"{acc_s:.6f}",
             "link_auc": link_auc,
@@ -240,10 +266,42 @@ def main():
         v_n2v,
     )
 
+    if args.with_method1:
+        modes = [m.strip() for m in args.method1_modes.split(",") if m.strip()]
+        valid_modes = {"preserve", "augment"}
+        for mode in modes:
+            if mode not in valid_modes:
+                raise SystemExit(f"unsupported Method 1 mode: {mode}")
+
+        for mode in modes:
+            weighted_graph = out / f"weighted_{mode}.txt"
+            hierarchy = out / f"hier_method1_{mode}.txt"
+            vectors = out / f"vec_method1_{mode}.txt"
+            t_weight = run([
+                "python3", "scripts/build_reweighted_graph.py",
+                "--edgelist", str(split_train),
+                "--attributes", args.attributes,
+                "--out", str(weighted_graph),
+                "--mode", mode,
+                "--alpha", str(args.method1_alpha),
+                "--knn-k", str(args.method1_knn_k),
+            ], cwd=REPO_ROOT)
+
+            run_method(
+                f"method1-{mode}",
+                [
+                    ["./recpart_weighted", str(weighted_graph), str(hierarchy), "1"],
+                    ["./hi2vec", str(args.dim), str(args.a), str(hierarchy), str(vectors)],
+                ],
+                vectors,
+                alpha=f"{args.method1_alpha:.6f}",
+                knn_k=str(args.method1_knn_k),
+                weight_build_time=t_weight,
+            )
+
     out_csv = out / "results.csv"
-    fields = list(rows[0].keys())
     with open(out_csv, "w", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=fields)
+        w = csv.DictWriter(f, fieldnames=FIELDNAMES)
         w.writeheader()
         w.writerows(rows)
 

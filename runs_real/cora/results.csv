@@ -1,6 +1,8 @@
-dataset,method,total_time_sec,embed_time_sec,node_accuracy_mean,node_accuracy_std,link_auc,link_ap,vectors
-cora,compile,0.004496,0.000000,,,,,-
-cora,louvainNE,11.138386,0.200568,0.270918,0.000000,0.840804,0.875567,runs_real/cora/vec_base.txt
-cora,attr-louvainNE,12.805525,1.927959,0.127909,0.000000,0.718155,0.789334,runs_real/cora/vec_attr.txt
-cora,deepwalk,18.704821,7.792821,0.045834,0.000000,0.524911,0.519125,runs_real/cora/vec_deepwalk.txt
-cora,node2vec,18.827347,7.794241,0.045834,0.000000,0.525780,0.519312,runs_real/cora/vec_node2vec.txt
+dataset,method,alpha,knn_k,weight_build_time_sec,embed_time_sec,eval_time_sec,total_time_sec,node_accuracy_mean,node_accuracy_std,link_auc,link_ap,vectors
+cora,compile,,,0.000000,0.000000,0.000000,0.004426,,,,,-
+cora,louvainNE,,,0.000000,0.196144,10.620501,10.816644,0.263102,0.000000,0.860134,0.883040,runs_real/cora/vec_base.txt
+cora,attr-louvainNE,,,0.000000,1.738243,10.985784,12.724026,0.128087,0.000000,0.713699,0.785804,runs_real/cora/vec_attr.txt
+cora,deepwalk,,,0.000000,7.516863,10.694301,18.211164,0.045834,0.000000,0.524911,0.519125,runs_real/cora/vec_deepwalk.txt
+cora,node2vec,,,0.000000,7.454253,10.551852,18.006105,0.045834,0.000000,0.525780,0.519312,runs_real/cora/vec_node2vec.txt
+cora,method1-preserve,0.800000,5,0.914945,0.210645,10.717301,11.842891,0.285131,0.000000,0.857608,0.884396,runs_real/cora/vec_method1_preserve.txt
+cora,method1-augment,0.800000,5,49.638767,0.281801,10.529819,60.450386,0.280512,0.000000,0.861442,0.879691,runs_real/cora/vec_method1_augment.txt

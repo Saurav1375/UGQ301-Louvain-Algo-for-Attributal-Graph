@@ -37,7 +37,7 @@ Supervisor: Prof. Soumajit Pramanik
 \maketitle
 
 \begin{abstract}
-This report documents the complete implementation, benchmarking, and analysis of an attributed extension of LouvainNE. The objective from our Statement of Purpose (SOP) was to integrate attributes \emph{inside} the LouvainNE pipeline while retaining strong efficiency. We implemented an attributed hierarchy builder (\texttt{recpart\_attr}), an attributed embedding generator (\texttt{hi2vec\_attr}), complete benchmark scripts, link-prediction evaluation, hyperparameter sweeps over attribute weights, CSV export pipelines, and reproducible figure generation. Experiments were run on the real datasets Cora and BlogCatalog and compared against LouvainNE, DeepWalk, and Node2Vec.
+This report documents the complete implementation, benchmarking, and analysis of our extensions to LouvainNE for attributed graphs. The objective from our Statement of Purpose (SOP) was to integrate attributes \emph{inside} the LouvainNE pipeline while retaining strong efficiency. We implemented two concrete attributed strategies: (i) an internal attributed LouvainNE pipeline with attributed hierarchy construction (\texttt{recpart\_attr}) and attributed embedding generation (\texttt{hi2vec\_attr}), and (ii) SOP Method 1, a structural reweighting pipeline that injects attributes into edge weights before hierarchy construction (\texttt{recpart\_weighted}). We also implemented complete benchmark scripts, link-prediction evaluation, hyperparameter sweeps over attribute weights, CSV export pipelines, and reproducible figure generation. Experiments were run on the real datasets Cora and BlogCatalog and compared against LouvainNE, DeepWalk, and Node2Vec. The final results show that Method 1 preserve gives the best speed/accuracy tradeoff on Cora, while Method 1 augment gives the strongest overall quality on BlogCatalog.
 \end{abstract}
 
 \section{SOP Details and Problem Statement}
@@ -71,18 +71,36 @@ Each node has additional features (attributes), such as text/topic features (Cor
   \item \texttt{recpart} / \texttt{hi2vec}: original LouvainNE baseline.
   \item \texttt{recpart\_attr}: attributed hierarchy construction.
   \item \texttt{hi2vec\_attr}: attributed embedding generation.
+  \item \texttt{recpart\_weighted}: weighted hierarchy construction for SOP Method 1.
   \item \texttt{attr.c}, \texttt{attr.h}: loading and querying attributes.
   \item \texttt{scripts/embed\_baselines.py}: DeepWalk and Node2Vec baselines.
   \item \texttt{scripts/eval\_node\_classification.py}: node classification metric.
   \item \texttt{scripts/split\_link\_prediction.py}: train/test edge split + negatives.
   \item \texttt{scripts/eval\_link\_prediction.py}: link AUC and AP.
   \item \texttt{scripts/run\_experiments.py}: end-to-end benchmark + CSV export.
+  \item \texttt{scripts/build\_reweighted\_graph.py}: Method 1 weighted graph builder.
+  \item \texttt{scripts/run\_method1.py}: standalone Method 1 runner.
   \item \texttt{scripts/sweep\_attr\_params.py}: $\lambda$/$\beta$ sweeps + heatmaps.
   \item \texttt{scripts/plot\_results.py}: publication-ready SVG comparison plots.
   \item \texttt{scripts/build\_report\_bundle.py}: one-command artifact bundle generation.
 \end{itemize}
 
 \subsection{Where attributes are integrated (internally)}
+\textbf{Stage 0: graph construction for SOP Method 1.}
+Before Louvain partitioning, we construct a weighted graph in which attributes directly influence edge strengths. Two variants were implemented.
+
+\textbf{Edge-preserving Method 1:}
+\[
+w(i,j) = \alpha \cdot 1 + (1-\alpha)\cdot \mathrm{sim}(x_i, x_j)
+\]
+for existing graph edges $(i,j)$.
+
+\textbf{Edge-augmenting Method 1:}
+\[
+w(i,j) = (1-\alpha)\cdot \mathrm{sim}(x_i, x_j)
+\]
+for top-$k$ semantic neighbors added from attribute space. In our implementation, $\mathrm{sim}$ is cosine similarity normalized into $[0,1]$. This keeps the LouvainNE pipeline intact while changing the graph that Louvain sees.
+
 \textbf{Stage 1: hierarchy construction.}
 During Louvain node moves, we changed gain from purely structural to:
 \[
@@ -97,7 +115,10 @@ z_u = z^{\text{hier}}_u + \beta\,P x_u
 \]
 where $P$ is a random projection and $\beta$ controls attribute strength.
 
-This satisfies the requirement that attributes influence both partitioning and final vectors.
+This satisfies the requirement that attributes influence partitioning, graph formulation, and final vectors.
+
+\subsection{Why Method 1 matters}
+Method 1 is important because it is closer to the speed-preserving spirit of LouvainNE than many neural attributed methods. It avoids message passing, backpropagation through edges, and epoch-wise graph training. The preserve variant is especially efficient because it only changes existing edge weights and then reuses the standard LouvainNE hierarchy-plus-hi2vec pipeline.
 
 \section{Data and Preprocessing}
 \subsection{Datasets used (real only)}
@@ -142,43 +163,55 @@ All values below are from generated CSVs in \texttt{runs\_real}.
 \toprule
 Dataset & Method & Total Time (s) & Embedding Time (s) & Node Accuracy & Link AUC \\
 \midrule
-Cora & LouvainNE & 11.138 & 0.201 & 0.2709 & 0.8408 \\
-Cora & Attr-LouvainNE & 12.806 & 1.928 & 0.1279 & 0.7182 \\
-Cora & DeepWalk & 18.705 & 7.793 & 0.0458 & 0.5249 \\
-Cora & Node2Vec & 18.827 & 7.794 & 0.0458 & 0.5258 \\
+Cora & LouvainNE & 10.817 & 0.196 & 0.2631 & 0.8601 \\
+Cora & Attr-LouvainNE & 12.724 & 1.738 & 0.1281 & 0.7137 \\
+Cora & Method1-Preserve & 11.843 & 0.211 & 0.2851 & 0.8576 \\
+Cora & Method1-Augment & 60.450 & 0.282 & 0.2805 & 0.8614 \\
+Cora & DeepWalk & 18.211 & 7.517 & 0.0458 & 0.5249 \\
+Cora & Node2Vec & 18.006 & 7.454 & 0.0458 & 0.5258 \\
 \midrule
-BlogCatalog & LouvainNE & 6.843 & 0.356 & 0.1612 & 0.5796 \\
-BlogCatalog & Attr-LouvainNE & 7.867 & 1.420 & 0.1825 & 0.6133 \\
-BlogCatalog & DeepWalk & 14.008 & 7.474 & 0.1379 & 0.4999 \\
-BlogCatalog & Node2Vec & 18.107 & 11.667 & 0.1379 & 0.5001 \\
+BlogCatalog & LouvainNE & 7.004 & 0.367 & 0.1641 & 0.5950 \\
+BlogCatalog & Attr-LouvainNE & 8.073 & 1.346 & 0.1854 & 0.6385 \\
+BlogCatalog & Method1-Preserve & 8.705 & 0.516 & 0.1854 & 0.6232 \\
+BlogCatalog & Method1-Augment & 20.559 & 0.574 & 0.2294 & 0.6585 \\
+BlogCatalog & DeepWalk & 13.343 & 7.130 & 0.1379 & 0.4999 \\
+BlogCatalog & Node2Vec & 17.256 & 11.096 & 0.1379 & 0.5001 \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
 \textbf{Interpretation for beginners:}
 \begin{itemize}
-  \item On BlogCatalog, attributed integration improves accuracy and AUC over structural LouvainNE.
-  \item On Cora in this implementation/configuration, structural LouvainNE still performs better in classification/AUC.
-  \item LouvainNE-style methods remain substantially faster than walk baselines in embedding time.
+  \item On \textbf{Cora}, Method1-Preserve is the most practical result: it beats LouvainNE on node classification while staying close in total runtime.
+  \item On \textbf{BlogCatalog}, Method1-Augment gives the strongest quality among all tested methods, but it is slower because semantic edge construction costs extra time.
+  \item Attr-LouvainNE improves BlogCatalog over structural LouvainNE, but on Cora it remains weaker than both structural LouvainNE and Method 1.
+  \item LouvainNE-style methods still remain much faster than DeepWalk and Node2Vec in the actual embedding-generation step.
+\end{itemize}
+
+\subsection{Method 1-specific observations}
+\begin{itemize}
+  \item \textbf{Preserve mode} is the speed-oriented version. It does not change graph size, only edge weights, so it stays close to the original LouvainNE runtime.
+  \item \textbf{Augment mode} adds semantic edges from attribute space, which can improve quality but also adds a significant preprocessing cost, especially on sparse high-dimensional datasets such as Cora.
+  \item The benchmark CSV separates this cost into \texttt{weight\_build\_time\_sec}, which makes the tradeoff visible and fair.
 \end{itemize}
 
 \section{Figures}
 \begin{figure}[H]
 \centering
-\includegraphics[width=\columnwidth]{assets/time_comparison_baseline.pdf}
-\caption{Baseline runtime comparison.}
+\includegraphics[width=\columnwidth]{assets/time_comparison_all_methods.pdf}
+\caption{Runtime comparison including Method 1 preserve and Method 1 augment.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\columnwidth]{assets/node_accuracy_baseline.pdf}
-\caption{Baseline node classification accuracy.}
+\includegraphics[width=\columnwidth]{assets/node_accuracy_all_methods.pdf}
+\caption{Node classification accuracy including Method 1 variants.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\columnwidth]{assets/link_auc_baseline.pdf}
-\caption{Baseline link prediction AUC.}
+\includegraphics[width=\columnwidth]{assets/link_auc_all_methods.pdf}
+\caption{Link prediction AUC including Method 1 variants.}
 \end{figure}
 
 \section{Hyperparameter Sweep ($\lambda$, $\beta$)}
@@ -250,6 +283,16 @@ BlogCatalog & 8.791 & 0.1914 & 0.6164 \\
 ./scripts/benchmark_real.sh
 \end{verbatim}
 
+\textbf{This benchmark now runs:}
+\begin{itemize}
+  \item LouvainNE
+  \item Attr-LouvainNE
+  \item Method 1 Preserve
+  \item Method 1 Augment
+  \item DeepWalk
+  \item Node2Vec
+\end{itemize}
+
 \textbf{2) Dense sweep (example):}
 \begin{verbatim}
 python3 scripts/sweep_attr_params.py \
@@ -284,12 +327,13 @@ python3 scripts/build_report_bundle.py --runs-root runs_real
 
 \section{Limitations and Future Work}
 \begin{itemize}
-  \item Performance is dataset-dependent: attributed integration improved BlogCatalog but not Cora in current setup.
+  \item Performance is dataset-dependent: Method 1 preserve is best balanced on Cora, while Method 1 augment is strongest on BlogCatalog.
   \item More tuning dimensions are possible (projection strategy, similarity design, label split policy).
+  \item Method 1 augment can become expensive when attribute-space candidate generation is large.
   \item Additional baselines and standardized public splits can strengthen external comparability.
 \end{itemize}
 
 \section*{Conclusion}
-This work delivers a complete, reproducible attributed extension of LouvainNE with integrated benchmarks, sweeps, plots, and reporting tooling. The extension satisfies the core requirement of internal attribute integration while keeping an efficiency-oriented pipeline and transparent evaluation.
+This work delivers a complete, reproducible attributed extension of LouvainNE with integrated benchmarks, sweeps, plots, and reporting tooling. The final system now includes both an internally attributed LouvainNE variant and SOP Method 1 structural reweighting. The preserve version of Method 1 demonstrates that attribute-aware graph reformulation can improve accuracy while staying close to LouvainNE-level efficiency, while the augment version shows that higher-quality attributed neighborhoods can improve downstream quality further when additional preprocessing cost is acceptable.
 
 \end{document}

@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-O3 -std=gnu11 -Wall -Wextra
-EXEC=recpart hi2vec renum recpart_attr hi2vec_attr
+EXEC=recpart hi2vec renum recpart_attr hi2vec_attr recpart_weighted
 
 all: $(EXEC)
 
@@ -9,6 +9,9 @@ recpart: partition.o attr.o recpart.o
 
 recpart_attr: partition.o attr.o recpart_attr.o
 	$(CC) -o recpart_attr partition.o attr.o recpart_attr.o $(CFLAGS) -lm
+
+recpart_weighted: partition.o attr.o recpart_weighted.o
+	$(CC) -o recpart_weighted partition.o attr.o recpart_weighted.o $(CFLAGS) -lm
 
 hi2vec: hi2vec.c
 	$(CC) -o hi2vec hi2vec.c $(CFLAGS) -lm
@@ -20,7 +23,7 @@ renum: renum.c
 	$(CC) -o renum renum.c $(CFLAGS)
 
 clean:
-	rm -f *.o recpart hi2vec renum recpart_attr hi2vec_attr
+	rm -f *.o recpart hi2vec renum recpart_attr hi2vec_attr recpart_weighted
 
 %.o: %.c %.h
 	$(CC) -o $@ -c $< $(CFLAGS)
